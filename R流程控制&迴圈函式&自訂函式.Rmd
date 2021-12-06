@@ -1,0 +1,103 @@
+---
+---
+# 20180314:流程控制 1:54:30 https://rpubs.com/ywchiu/Demo20180314
+# 20180321:迴圈函式 1:13:13
+
+# if...else if...else
+```{r}
+x <- 2
+if(x > 3){
+  print("x > 3")
+} else if( x==3 ){
+  print("x == 3")
+} else{
+  print("x<=3")
+}
+```
+# for迴圈：在R不建議使用
+# 物件導向，會創建新物件來取代原物件，很慢 → 儘量用迴圈函式、內建函式
+```{r}
+# 三種for迴圈
+x <-c("sunny","rainy", "cloudy", "rainy", "cloudy")
+length(x) #向量x的長度是5
+# 第一種：第一個位置...依序取出
+for( i in 1:length(x)){
+  print(x[i])
+}
+# 第二種：
+for(i in seq_along(x)){
+  print(x[i])
+}
+
+# 第三種
+for(letter in x){
+  print(letter)
+}
+
+```
+# while迴圈
+# 當不滿足while中定義的條件時，才會跳出迴圈
+```{r}
+s   <- 0 
+cnt <- 0
+# 當cnt小於等於100
+while (cnt <= 100){
+  s   <- s + cnt 
+  cnt <- cnt + 1
+}
+s #5050
+cnt #101
+```
+# 網路爬蟲：使用for迴圈抓取多頁連結
+```{r}
+url<-'https://tw.appledaily.com/new/realtime/'
+# 其他程式語言
+for (i in 1:10){
+  print(paste0(url,i))
+}
+# 在R推薦的方法:迴圈函式+匿名函式
+lapply(1:10, function(i) paste0(url, i))
+```
+# 函式 (Function)
+```{r}
+# ex1
+#函式名稱 <- function(參數n個){
+#  程式碼1
+#  程式碼2
+#  return 值
+# }
+
+multiplyNum2 <- function(a,b){
+  a + b
+  return(a * b)
+}
+
+multiplyNum2(3,5)
+
+# ex2
+addNum <- function(a = 3,b = 2){
+  a * 8 + b * 2
+}
+addNum()
+```
+# lazy function
+```{r}
+f <- function(a, b) {
+ a * 2
+}
+f(3)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
