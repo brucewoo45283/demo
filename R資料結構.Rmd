@@ -1,0 +1,305 @@
+---
+---
+### https://rpubs.com/ywchiu
+
+#向量:可存放多個變數的資料結構
+```{r cars}
+#創建向量 c()
+height_vec<-c(180,169,173)
+name_vec<-c("Brian", "Toby", "Sherry")
+#向量運算
+x <-c(1,2,3,4)
+y <-c(2,3,4,5)
+x/y
+x +1             #向量內所有元素都加1
+#內建函式:seq()，產生向量
+y <-seq(1,20)
+y
+seq(1,3.5, by=0.5)
+seq(1,10,length=2)
+
+# 取出向量內的元素
+# 根據位置取第一筆
+x[1]
+#當向量內有遺失值
+x<-c(1,100,7,9,NA)
+sum(x, na.rm = TRUE)
+
+#向量命名:names()
+height_vec<-c(180,169,173)
+name_vec<-c("Brian", "Toby", "Sherry")
+names(height_vec)<-c("Brian", "Toby", "Sherry")
+height_vec
+
+#根據名稱取值:取的時候，要包入向量
+height_vec[c("Toby", "Sherry")]
+
+#條件判斷(布林值)
+height_vec>175
+height_vec<175
+height_vec>=175
+height_vec<=175
+height_vec==180
+height_vec!=180
+
+#使用& (and) 找出符合條件的資料
+height_vec[height_vec>=170&height_vec<180]
+
+#使用|(or) 找出符合條件的資料
+height_vec[height_vec>=180|height_vec<170]
+
+#篩選出符合條件的值
+height_vec[height_vec>175]
+```
+
+# SAVE & LOAD:可以存下當前的環境變數
+```{r cars}
+getwd() #可以查當前所在位置的目錄夾
+#save.image("C:/Users/nc20/Desktop/0313.RData")
+# get working directory
+# set working directory : 更改路徑
+# setwd('C:/Users/nc20/Desktop/')
+# save all variables into RData file
+# save.image("0313_2.RData")
+# load variables from RData file
+# load("0313_2.RData")
+summary(cars)
+```
+# save & load 如何儲存物件（把建好的模型直接存下來）
+```{r}
+## Save Model
+# crtl加enter: 執行
+data(anscombe)
+fit <- lm(y1 ~ x1, data = anscombe)
+fit
+plot(y1 ~ x1, data = anscombe)
+abline(fit, col="red")
+predict(fit, data.frame(x1 = 16))
+save(fit, file = 'model.RData')  #直接把模型存在目錄夾
+load('model.RData')
+predict(fit, data.frame(x1 = 18))
+```
+# 矩陣Matrix
+```{r}
+# use vector to create matrix
+# 三筆資料
+kevin <- c(85, 73)
+marry <- c(72, 64)
+jerry <- c(59, 66)
+c(kevin, marry, jerry)
+
+# 串成向量
+matrix(c(kevin, marry, jerry), nrow = 3)     # 直的填入
+matrix(c(kevin, marry, jerry), nrow = 3 ,byrow = TRUE) # best sol:橫的填入
+
+# create matrix with byrow=FALSE and byrow=TRUE
+1:9
+matrix(1:9, ncol = 4, nrow = 4) # 產生一個4乘4矩陣，1到9直的填入
+matrix(1:9, nrow = 3)
+m <- matrix(1:9, nrow = 3, byrow = TRUE) # 產生一個3列矩陣，1到9橫的填入
+m
+# 依據位置篩選資料
+m[1,] # 取得第一列的所有資料
+m[,1] # 取得第一欄的所有資料
+
+# 增添欄位名稱
+mat <- matrix(c(kevin, marry, jerry), nrow = 3 ,byrow = TRUE)
+mat
+rownames(mat) <- c('kevin', 'marry', 'jerry')
+mat
+colnames(mat) <- c('first', 'second')
+mat
+# 根據欄位名稱篩選資料
+mat['kevin',]
+mat[,'first']
+mat['marry', 'second']
+# 建立矩陣，順便指定欄列名稱 dimnames(列名, 欄名)
+mat <- matrix(c(kevin, marry, jerry), nrow = 3 ,byrow = TRUE, dimnames = list( c('kevin', 'marry', 'jerry') , c('first', 'second') ) )
+mat
+# get basic info of a matrix
+dim(mat)
+nrow(mat) #幾列
+ncol(mat) #幾欄
+# 篩選資料
+mat[1,] #第一列
+mat[c(TRUE, FALSE, FALSE),] #第一列
+mat['kevin',]
+mat[,1]
+mat[,c(TRUE, FALSE)]
+mat[,'first']
+mat[c(2,3),]
+mat[2:3,]
+mat[c(FALSE, TRUE, TRUE), ]
+mat[c('marry', 'jerry'),]
+mat[2,1]
+mat['marry', 'first']
+# 增添新列:row bind
+mat2 <- rbind(mat, c(78, 63))
+rownames(mat2)[4] <- 'sam'
+mat2
+# 增添新欄:column bind
+mat3 <- cbind(mat, c(82, 77, 70))
+mat3
+colnames(mat3)[3] 
+colnames(mat3)[3] <- 'third'
+mat3
+# 矩陣之運算 matrix computation
+m1 <-matrix(1:4, byrow=TRUE, nrow=2)
+m1
+m2 <-matrix(5:8, byrow=TRUE, nrow=2)
+m2
+m1 + m2
+m1 - m2
+m1 * m2
+m1 / m2
+mat2
+rowSums(mat2) #列總和
+colSums(mat2) #欄總和
+?rowSums
+# 矩陣積 Product of matrix
+m1 %*% m2
+# 9 X 1
+m1 <- matrix(1:9, nrow = 9)
+m1
+# 1 X 9 
+m2 <- matrix(1:9, ncol = 9)
+m2
+# 9X1 %*% 1X9 = 9X9
+m1 %*% m2
+## 範例
+kevin <- c(85, 73)
+marry <- c(72, 64)
+jerry <- c(59, 66)
+mat <- matrix(c(kevin, marry, jerry), nrow = 3, byrow=TRUE)
+colnames(mat) <- c('first', 'second')
+rownames(mat) <- c('kevin', 'marry', 'jerry')
+# method 1
+mat[,1] * 0.4 + mat[,2] * 0.6
+mat[,'first'] * 0.4 + mat[,'second'] * 0.6
+# method 2: 3X2 %*% 2X1 = 3X1
+mat %*% matrix(c(0.4, 0.6), nrow = 2)
+```
+# 虛擬變量: Factor
+```{r}
+## create a vector
+weather <- c('sunny', 'rainy', 'cloudy', 'rainy', 'cloudy')
+weather
+class(weather) #字串:無限的集合
+## create a factor from vector : 底層是用0, 1, 2去編碼資料
+weather_category <- factor(weather)
+weather_category
+class(weather_category) # factor:有限的集合
+##use levels to examine categories
+levels(weather_category)
+# 建立可比較的類別資料:create an ordering factor
+temperature <-c("Low", "High", "High", "Medium", "Low", "Medium") #無指定
+temperature_category <- factor(temperature, order=TRUE, levels=c("Low", "Medium", "High")) #使用levels指定順序
+temperature
+temperature[2] > temperature[1] # FALSE
+temperature[1] > temperature[2] # TRUE，用字母L跟字母H去做判定
+temperature_category
+temperature_category[3] > temperature_category[1]
+temperature_category[4] > temperature_category[3]
+levels(temperature_category)
+# factor()可以任意改變值 replace factor name with new name
+temperature <-c("Low", "High", "High", "Medium", "Low", "Medium")
+temperature_category <- factor(temperature)
+temperature_category
+levels(temperature_category)
+levels(temperature_category) <- c('H', 'L', 'M')
+temperature_category
+```
+# DataFrame：表示結構化資料的最好方式
+# 在Matrix中，所有資料必須是同一資料型態，Data Frame可以混雜不同型態資料
+```{r}
+# 矩陣會把所有資料強制轉成字串
+days <-c('mon','tue', 'wed', 'thu','fri')
+temp <-c(22.2 ,   21,    23,  24.3,   25)
+rain <-c(TRUE , TRUE, FALSE, FALSE, TRUE)
+class(days) #字串
+class(temp) #數值
+class(rain) #布林值
+d <- c(days, temp, rain) #在向量裡，全部資料被轉成字串
+d
+class(d) #"character"
+mat <- matrix(c(days, temp, rain), nrow = 5)
+class(mat) #字串的向量
+# data.frame 會保有原本的資料型態
+df <- data.frame(days, temp, rain)
+class(df)
+View(df)
+class(df)
+str(df)
+summary(df)
+data()
+## outbreaks dataset
+### https://cran.r-project.org/web/packages/outbreaks/index.html
+### http://www.repidemicsconsortium.org/
+data(iris)
+View(iris)
+class(iris)
+str(iris)
+summary(iris)
+head(iris)
+head(iris, 10)
+?head
+tail(iris)
+tail(iris, 10)
+# data.frame 篩選資料:資料表名稱[列 , 欄]
+iris[1:3 , ]
+iris[1:3 , 1]
+iris[1:3 , 'Sepal.Length']
+head(iris[    , 1:2]) 
+iris[ 1:6   , 1:2] #前六筆、前兩欄
+str(iris)
+# 根據欄位名稱 $
+head(iris$Sepal.Length)
+five.sepal.iris <- iris[1:5, c('Sepal.Length', 'Sepal.Width')]
+five.sepal.i，ris
+# 前五個欄位，Species欄位，值為setosa
+，setosa.data <- iris[iris$Species == 'setosa', 1:5]
+head(setosa.data)
+which(iris$Species == 'setosa')
+setosa.data2 <- iris[which(iris$Species == 'setosa'), 1:5]
+setosa.data2
+head(sort(iris$Sepal.Length))
+head(sort(iris$Sepal.Length, decreasing = TRUE))
+
+
+# 資料排序
+# return ordered value
+a <- c(3,1,2,7,9,4)
+sort(a)
+# order 可以取得排序後的位置: return ordered index (position)
+order(a) # 2 3 1 6 4 5 ← 1最小、出現在第2個位置；我先排序、然後回傳所在的位置
+head(iris[order(iris$Sepal.Length),]) #根據iris$Sepal.Length由小排到大，同時把列排序
+head(iris[order(iris$Sepal.Length, decreasing = TRUE),]) #decreasing = TRUE 由大排到小
+```
+# Lists : 混雜不同的資料型態
+```{r}
+phone <-list(thing="iphoneX" , height=5.65, width=2.79 )
+phone
+phone$thing
+phone$height
+student <- list(name = 'Toby',score =c(87,57,72))
+student$score
+student$score[1]
+min(student$score)
+student[[1]]
+li <- list(c(70,65,90), c(56,75,66,63))
+li[[1]]
+li[[2]]
+mean(li[[1]])
+mean(li[[2]])
+```
+
+
+
+
+
+
+
+
+
+
+
