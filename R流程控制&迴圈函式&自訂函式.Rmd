@@ -1,7 +1,8 @@
 ---
 ---
 # 20180314:流程控制 1:54:30 https://rpubs.com/ywchiu/Demo20180314
-# 20180321:迴圈函式 1:13:13
+# 20180321:迴圈函式 1:13:13 https://rpubs.com/ywchiu/Demo20180321
+# 函式 https://yijutseng.github.io/DataScienceRBook/function.html
 
 # if...else if...else
 ```{r}
@@ -88,7 +89,102 @@ f <- function(a, b) {
 f(3)
 
 ```
+# 迴圈函式
 
+# lapply: 將函式套用在清單(List)上的每一元素
+```{r}
+x <- list(c(1,2,3,4), c(5,6,7))
+x
+# 範例一:把list內的向量各自加總
+# method 1
+ary <- c()
+for(ele in x){
+  # print(ele)
+  # print(sum(ele))
+  ary <- c(ary, sum(ele))
+}
+ary
+
+# metohd 2
+ary2 <- c()
+for( i in seq_along(x)){
+  ary2 <- c(ary2 , sum(x[[i]]))
+}
+ary2
+
+# method 3
+ary3 <- c(0,0)
+for( i in seq_along(x)){
+  ary3[i] <- sum(x[[i]])
+}
+ary3
+
+# best sol:把sum這個函式套用在x每個向量
+lapply(x, sum)
+
+# 範例二:矩陣
+m1 <- matrix(1:4, byrow=TRUE, nrow=2)
+m2 <- matrix(5:8, byrow=TRUE, nrow=2)
+print(m1)
+print(m2)
+li <- list(m1, m2) # 把兩個矩陣包入list
+print(li)
+lapply(li, mean)
+
+# 範例三:定義一個函式，每次取出函式的第一列，把自訂函式套進lapply
+getFirstRow <- function(m){
+  return(m[1,])
+}
+lapply(li, getFirstRow)
+
+# 範例四:匿名函式
+lapply(li, function(m) m[1,])
+```
+
+# sapply: 產生較lapply簡化的結果, s => Simplified
+```{r}
+# 原本lappy要用unlist解開
+x <- list(c(1,2,3,4),c(5,6,7,8))
+
+lapply(x, sum)
+
+unlist(lapply(x, sum))
+
+# sapply不用unlist
+sapply(x, sum)
+
+# 矩陣範例
+m1 <- matrix(1:4, byrow=TRUE, nrow=2)
+m2 <- matrix(5:8, byrow=TRUE, nrow=2)
+
+li <- list(m1,m2)
+lapply(li, function(m) m[1,])
+
+# 使用sapply : 直接把結果回傳矩陣
+sapply(li, function(m) m[1,])
+
+sapply(li, mean)
+```
+# apply: 將函式套用在陣列(array)中，專用在矩陣上
+```{r}
+m <- matrix(1:4, byrow=TRUE, nrow=2)
+print(m)
+# 列運算
+rowSums(m)
+apply(m, 1, sum)
+# 欄運算
+apply(m, 2, sum)
+
+```
+
+# tapply: 套用函式在向量(vector)的部分子集合，分組計算很好用
+```{r}
+x <- c(80,70,59,88,72,57)
+t <- c(1,1,2,1,1,2) #第一組或第二組
+# 第一組、第二組，分組平均 tapply(元素, 組別, 統計的方法)
+tapply(x, t, mean)
+
+```
 
 
 
