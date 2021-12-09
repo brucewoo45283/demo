@@ -1,0 +1,190 @@
+---
+---
+# 20180328：https://rpubs.com/ywchiu/Demo20180328
+# dplyr:R裡面的sql語句，敘述性統計專用套件
+install.packages('dplyr')
+library(dplyr)
+install.packages('readr')
+library(readr)
+Dengue <- read_csv("https://raw.githubusercontent.com/ywchiu/cdc_course/master/data/Dengue.csv")
+head(Dengue)
+Dengue$居住縣市 <- as.factor(Dengue$居住縣市)
+Dengue$性別 <- as.factor(Dengue$性別)
+Dengue$是否境外移入 <- as.factor(Dengue$是否境外移入)
+Dengue$感染國家 <- as.factor(Dengue$感染國家)
+summary(Dengue)
+# 提供操作資料的基本語法
+# filter,select,arrange,mutate,summarise,group_by
+# 請回答該資料集有多少筆資料?
+```{r}
+nrow(Dengue)
+```
+# 資料集分組統計
+```{r}
+Dengue %>%
+  group_by(發病年, 感染國家) %>%
+  summarize(stat_sum=sum(病例數))
+```
+# 中華民國的確定病例數?
+```{r}
+Dengue %>%
+  filter(感染國家=="中華民國") %>%
+  select("病例數") %>%
+  sum()
+  
+```
+# 2014年居住於台北市的女性確診病例有多少件
+```{r}
+Dengue %>%
+  filter(感染國家 == '中華民國' & 發病年 == 2014 & 居住縣市 == '台北市' & 性別 == '女') %>%
+  select('病例數') %>%
+  sum()
+```
+# 排序
+```{r}
+# 範例一:中華民國在2014年時，哪個縣市有最多男性確定病例?
+Dengue %>%
+  filter(感染國家=="中華民國"&發病年==2014&性別=="男")%>%
+  arrange(desc(病例數))
+#範例二
+Dengue %>%
+  group_by(居住縣市) %>%
+  summarise(instance_num = sum(病例數, na.rm=TRUE)) %>%
+  arrange(desc(instance_num))
+
+```
+# 台南市在哪一年有最多男性確定病例?
+```{r}
+Dengue %>%
+  filter(居住縣市 == '台南市' & 性別 == '男') %>%
+  arrange(desc(病例數)) %>%
+  select('發病年') %>%
+  head(1)
+```
+# filter:AND,OR 與IN 來過濾資料
+```{r}
+#欄位交集:找出病例數超過100的男性案例
+filter(Dengue, 性別=="男"&病例數>100)
+
+#聯集:找出病例數超過100或男性案例
+filter(Dengue, 性別=="男"|病例數>100)
+
+#值聯集:找出台北或台南的病例
+filter(Dengue, 居住縣市%in%c("台南市", "台北市"))
+```
+# 新增欄位(mutate)
+```{r}
+# 計算總合
+frequsum <- Dengue %>% 
+  select('病例數') %>%
+  sum()
+#使用mutate 新增統計後的欄位
+Dengue %>%
+  select(病例數)%>%
+  mutate(portion=病例數/freqsum)
+#儲存新欄位
+Dengue <-Dengue %>%
+  mutate(portion=病例數/freqsum)
+```
+# 分組統計:group by & summarize;tapply只能一次處理一個欄位
+```{r}
+# 範例一
+Dengue %>%
+  group_by(居住縣市) %>%
+  summarise(instance_num = sum(病例數, na.rm=TRUE)) %>%
+  head()
+
+# 範例二
+Dengue %>%
+  group_by(發病年,感染國家, 居住縣市) %>%
+  summarise(instance_num = sum(病例數, na.rm=TRUE)) %>%
+  head()
+```
+# 同時針對同欄位做不同的統計:summarise_each
+```{r}
+# SQL語句:SELECT 居住縣市, min(病例數), min(portion), max(病例數), max(portion), avg(病例數), avg(portion) FROM Dengue GROUP BY 居住縣市
+# 範例一:依據居住縣市，同時算病例數的最小值、最大值、平均值
+Dengue %>%
+  group_by(居住縣市) %>%
+  summarise_each(funs(min,max,mean),  '病例數')
+
+# 範例二:繞過NA值，句號代表所有變數
+Dengue %>%
+  group_by(居住縣市) %>%
+  summarise_each(funs(min(., na.rm=TRUE),max(., na.rm=TRUE),mean(., na.rm=TRUE)),  c('病例數','portion'))
+
+```
+
+
+
+# 提供資料合併功能(JOIN):不同於資料庫，R只能兩兩串
+```{r}
+# inner_join
+county_stat <- Dengue %>%
+  group_by(居住縣市) %>%
+  summarise(instance_sum = sum(病例數))
+
+Dengue %>%
+  inner_join(county_stat, by="居住縣市") %>%
+  head()
+
+
+```
+# pivot table 樞紐分析表
+```{r}
+install.packages('reshape2')
+library(reshape2)
+# dcast
+data("airquality")   
+head(airquality)
+
+names(airquality) <- tolower(names(airquality))
+
+aqm <- melt(airquality, id=c("month", "day"), na.rm=TRUE)
+aqm
+
+dcast(aqm, month ~ variable, mean, margins = c("month", "variable"))
+```
+
+# pivot table 範例二
+```{r}
+county_stat <- Dengue %>%
+  group_by(發病年, 居住縣市) %>%
+  summarise_each(funs(sum(., na.rm=TRUE)), '病例數')
+
+sex_stat <- Dengue %>%
+  group_by(發病年, 性別) %>%
+  summarise_each(funs(sum(., na.rm=TRUE)), '病例數')
+
+country_stat <- Dengue %>%
+  group_by(發病年, 感染國家) %>%
+  summarise_each(funs(sum(., na.rm=TRUE)), '病例數')
+
+names(county_stat) <- c('year', 'variable', 'cnt')
+names(sex_stat) <- c('year', 'variable', 'cnt')
+names(country_stat) <- c('year', 'variable', 'cnt')
+
+country_stat <-as.data.frame(country_stat)
+sex_stat     <-as.data.frame(sex_stat)
+county_stat  <-as.data.frame(county_stat)
+
+df <- rbind(county_stat, sex_stat, country_stat)
+
+
+dcast(df,  variable ~ year, function(e) sum(e,na.rm=TRUE), margins = c("year", "variable"))
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
