@@ -1,0 +1,233 @@
+# https://rpubs.com/ywchiu/Demo20180508
+#由下疊到上
+#主題（Theme）:控制資料以外的繪圖組件
+#座標系統（Coordinates）:指定繪圖時所使用的座標系統
+#繪圖面（Facets）:指定如何將資料分散在多張子圖形中繪製
+#統計轉換（Statistics）:指定如何以將資料轉換為各種統計量。
+#幾何圖案（Geometries）:繪製資料用的幾何圖形
+#美學對應（Aesthetic）:指定原始資料與圖形之間的對應關係
+#資料來源（Data）:原始資料來源
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("readr")
+library(readr)
+install.packages("lubridate")
+library(lubridate)
+#時間格式:日期資料轉換; lubridate套件
+```{r}
+# 轉成Date時間格式:as.Date
+x <- as.Date('2018-05-08')
+class(x)
+# 系統時間之處理
+x<-Sys.time() #顯示系統現在的時間
+x
+#POSIXlt/ POSIXct格式
+p <-as.POSIXlt(x) # #存放年月日時分秒的list資料格式
+unclass(p)
+p$sec #拿出秒數
+
+p1 <-as.POSIXct(x)#存放秒數的資料格式
+unclass(p1)
+
+# 字串轉時間格式 strptime(x, "%m %d, %Y %H:%M")
+ds <-c("5 8, 2018 12:00")
+x <- strptime(ds, "%m %d, %Y %H:%M")
+print(x)
+x1 <- as.POSIXlt(as.Date('2021-12-10'))
+x1 - x # 距離現在?日
+
+#使用lubridate套件:ymd(),dmy(), ymd_hms()
+library(lubridate)
+ymd("20180605")
+ymd("2018/06/05")
+dmy("05/06/2011")
+ymd_hms('2018-05-06 08:00:00')
+
+# 獨立拆出年or月or日
+bday<-dmy("15/10/1988") #先用lubridate轉，日、月、年
+print(month(bday))   # 拆出月month()
+
+# 快速修改年or月or日
+year(bday) <- 2018
+print(bday)
+
+```
+
+#範例:
+#資料來源（Data）:「地區年齡性別統計表-麻疹」，資料清洗與轉換
+#https://raw.githubusercontent.com/ywchiu/cdc_course/master/data/measles.csv
+```{r}
+#匯入資料
+library(readr)
+measles <- read_csv("https://raw.githubusercontent.com/ywchiu/cdc_course/master/data/measles.csv")
+measles
+#數據清洗與轉換:把發病年、發病月合併，轉成日期格式
+#with(paste(欄位1, 欄位2, "字串", sep="分隔符號"), data=某資料集)
+with(paste(發病年份, 發病月份, "01", sep="/"), data=measles)
+# 轉時間格式，並新增一個發病時間的欄位
+measles$發病時間<-as.Date(with(paste(發病年份, 發病月份, "01", sep="/"), data=measles))
+head(measles)
+
+```
+#美學對應（Aesthetic）:aes(x= , y= )
+```{r}
+library(ggplot2)
+str(measles)
+measles$性別<-as.factor(measles$性別)
+measles$確定病名<-as.factor(measles$確定病名)
+measles$縣市<-as.factor(measles$縣市)
+measles$是否為境外移入<-as.factor(measles$是否為境外移入)
+
+# 繪製散佈圖
+p1 <- ggplot(measles, aes(x = 發病時間, y = 確定病例數))
+p1 + geom_point(color="purple", size = 5, shape = 19) #加入點、顏色、大小、形狀
+
+
+# 引用multiplot.R，在ggplt2把兩張不同的圖畫在一起
+source('https://raw.githubusercontent.com/ywchiu/cdc_course/master/script/multiplot.R')
+# 根據類別 (factor) 修改
+p2 <- p1 + geom_point(aes(color = factor(性別))) 
+p3 <- p1 + geom_point(aes(shape = factor(性別))) 
+multiplot(p2, p3, col= 2)
+
+# 修改標籤名稱與標題名稱
+p1 + geom_point() + xlab("時間") + ylab("病例數") + ggtitle("麻疹發病趨勢")+ theme(plot.title=element_text(size =20, hjust=0.5)) # theme: 標題置中
+
+# 圖層疊加
+p1 +geom_point(aes(color=factor(性別)))+geom_line(aes(color=factor(性別)))
+
+
+
+```
+# Geometry幾何圖案
+```{r}
+load("D:/R學習筆記/cdc.Rdata")
+View(cdc)
+# GGPlot histogram method 
+histogram<-ggplot(data=cdc, aes(x=weight))
+#histogram
+p1 <- histogram+geom_histogram(binwidth=5, color="black")
+p2 <- histogram+geom_histogram(binwidth=10, color="black")
+p3 <- histogram+geom_histogram(binwidth=20, color="black")
+multiplot(p1, p2, p3, cols = 3)
+```
+
+```{r}
+histogram +geom_histogram(binwidth=5, color="black") 
+
+```
+
+```{r}
+# Boxplot: GGPlot2 Method
+box<-ggplot(data=cdc, aes(x=gender, y=weight))
+b <- box+geom_boxplot(aes(fill=gender ))
+
+histogram <- ggplot(data=cdc, aes(x=weight))
+h <- histogram+geom_histogram(binwidth=5,aes(fill=gender ))
+
+multiplot(b, h, cols=1)
+
+
+```
+```{r}
+# add density to histogram
+histogram<-ggplot(data=cdc, aes(x=weight))
+histogram  + geom_histogram(binwidth = 10, color="black") + geom_density(stat="density", alpha=I(0.2), fill='blue', aes(x = weight, y = ..count.. * 10))
+```
+```{r}
+## GGPlot2 Barplot
+bar <-ggplot(data=cdc, aes(x=genhlth))
+# y = ax + b
+# y = slope * x + intercept
+bar +geom_bar() + geom_abline(aes(intercept = 4000,slope = 0, color='red'),linetype = 'dashed')
+```
+```{r}
+# geom_hline => yintercept
+bar +geom_bar() + geom_hline(aes(yintercept = 4000, color='red'),linetype = 'dashed')
+```
+
+```{r}
+# ggplot2 Pie Chart
+
+cdc_sex <- as.data.frame(table(cdc$gender))
+
+pie<-ggplot(cdc_sex, aes(x="", y=Freq,fill=Var1 ))
+
+p1 <- pie +geom_bar(width=1, stat ="identity")
+p1 + coord_polar(theta="y", start=0) +geom_text(aes(label=Freq, y =c(15000, 5000)), size=5)
+```
+
+# Statsitics
+```{r}
+smooth <- ggplot(data=cdc, aes(x=weight, y=wtdesire, color=gender))+geom_point(aes(shape=gender), size=1.5)
+
+
+lm_gender <- function(gender){
+  fit <- lm(wtdesire ~ weight, data = cdc[cdc$gender==gender,])
+  f <- paste('wtdesire', '~', 'weight * ', round(fit$coefficients[2], 2), '+',  round(fit$coefficients[1],2) )
+  f
+}
+lm_gender('m')
+lm_gender('f')
+smooth + geom_smooth(method = 'lm') +  geom_text(x = 400, y = 400, label = lm_gender('m'),color = 'black') + geom_text(x = 400, y = 100, label = lm_gender('f'), color= 'black')
+```
+
+```{r}
+#smooth + geom_smooth(method = 'loess')
+
+# geom_jitter
+box<-ggplot(data=cdc, aes(x=gender, y=weight))
+
+b1 <- box+geom_jitter()+geom_boxplot(aes(fill=gender ))
+b2 <- box+geom_point()+geom_boxplot(aes(fill=gender ))
+b3 <- box+geom_boxplot(aes(fill=gender )) + geom_point()
+
+multiplot(b1, b2, b3, cols = 3)
+
+
+
+```
+# Facets
+```{r}
+w <-ggplot(data=cdc, aes(x=weight, y =wtdesire)) +
+  geom_point(aes(color=factor(gender))) +
+  geom_smooth(method ='lm')
+w
+w + facet_grid(gender ~ . )
+w + facet_grid(. ~ gender )
+w + facet_grid(gender ~ genhlth )
+w + facet_grid(genhlth ~  gender)
+w + xlim(200,300) +  ylim(200,300)
+```
+
+#Theme
+```{r}
+w <-ggplot(data=cdc, aes(x=weight, y =wtdesire))+geom_point(aes(color=factor(gender)))+geom_smooth(method ='lm')
+w +xlab('體重')+ylab('理想體重')+ggtitle('體重v.s. 理想體重') + theme(axis.title.x=element_text(color ='DarkGreen', size =10),
+                                                          axis.title.y=element_text(color ='Red', size =10), 
+                                                          axis.text.x=element_text(size =30),
+                                                          axis.text.y=element_text(size =15))
+
+w + ggtitle('體重v.s. 理想體重') + theme(plot.title  = element_text(size = 20, hjust = 0.5,color='orange'))
+w +xlab('體重')+ylab('理想體重')+ggtitle('體重v.s. 理想體重')+
+  scale_color_manual(name ='性別',labels=c("MALE", "FEMALE"), values = c('red', 'blue'))+
+  theme(
+    legend.text=element_text(size =15),
+    legend.title=element_text(size =30),
+    legend.position=c(1,1),
+    legend.justification=c(1,1)
+    )
+```
+# Export Graph
+```{r}
+ggsave('w1.jpg')
+```
+
+
+
+
+
+
+
+
+
